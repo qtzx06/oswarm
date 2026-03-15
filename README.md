@@ -1,85 +1,132 @@
 # oswarm
 
-Tasteful multi-agent conductor. Spawns fleets of coding agents, orchestrates them with taste, and shows you everything in real-time.
+tasteful multi-agent conductor with reasoning-level observability.
 
-![oswarm TUI](media/tui-demo.png)
+spawns fleets of coding agents (claude code, codex, openclaw) via acp and agent sdk. the orchestrator encodes taste — smart decomposition, progressive context disclosure, ralph loop review cycles, quality grading, entropy management.
 
-## What it does
+nobody has shipped a portable, reusable version of what openai hand-built for their internal codex codebase. oswarm makes harness engineering patterns framework-level primitives.
 
-oswarm coordinates dozens of AI coding agents (Claude Code, Codex, OpenClaw — anything speaking ACP) across isolated worktrees. It decomposes goals, routes tasks, runs Ralph Loop review cycles between agents, detects when agents are stuck or spinning, and surfaces reasoning traces so you can see *why* agents made the decisions they did.
-
-The key differentiator: **taste**. The orchestrator encodes judgment about when to decompose, how to structure feedback loops, what context to inject, and when to stop. It's the portable, reusable version of [harness engineering](https://openai.com/index/harness-engineering/).
-
-## Install
+## install
 
 ```bash
 bun install
+bun link
 ```
 
-## Usage
+then from anywhere:
 
 ```bash
-# Live dashboard — watch your swarm work
-bun run cli.ts watch
-
-# Demo mode
-bun run cli.ts watch --demo
-
-# Run a goal
-bun run cli.ts run "refactor auth module"
-
-# Bootstrap harness in any repo
-bun run cli.ts init
+oswarm run "make me a game"
 ```
 
-## TUI
+or add to your path permanently:
 
-Three-pane terminal dashboard. Task tree on the left, agent activity in the center, reasoning stream on the right.
-
-| Key | Action |
-|-----|--------|
-| `Tab` | Switch panes |
-| `j`/`k` | Navigate |
-| `Enter` | Expand/collapse, open alert actions |
-| `a` | Jump to next alert |
-| `q` | Quit |
-
-### Alerts
-
-Heuristic anomaly detection runs continuously:
-
-| Pattern | Trigger |
-|---------|---------|
-| Stuck loop | Same action repeated 4+ times |
-| Spinning | 2k+ tokens with no file writes |
-| Conflict | Two agents writing same file |
-| Stalled | No activity for 60s+ |
-
-When detected, the TUI suggests actions — kill, reassign, hint, or ignore. You decide.
-
-## Architecture
-
-```
-Types → Config → Providers → Protocol → Engine → Adapters → Skills → CLI
+```bash
+echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 ```
 
-### Observer Pipeline
+## usage
 
-Agents emit NDJSON events to `.oswarm/events/`. The observer pipeline tails these files, reduces them into live state, runs alert detection, and feeds the TUI.
+```
+$ oswarm --help
 
-### Adapters
+oswarm v0.0.1 — tasteful multi-agent conductor
 
-Pluggable backends — each ~200 lines implementing a common interface:
+commands:
+  watch     live tui dashboard
+  run       execute a goal with agent swarm
+  init      bootstrap harness structure
+  status    show current swarm state
 
-- **Claude Code** via Agent SDK
-- **Codex** via ACPX
-- **OpenClaw** via ACPX / sessions_spawn
-- **Cloud** via Modal (GPU) / Fly.io Machines (networking)
+usage:
+  oswarm run "refactor auth module"
+  oswarm watch --demo
+  oswarm init
+```
 
-### Skills
+```bash
+# spawn a swarm on any goal
+oswarm run "refactor auth module"
 
-AgentSkills-format SKILL.md files installable in Claude Code and OpenClaw. The orchestrator itself is a skill. Publishable to ClawHub.
+# live tui — watch agents think in real-time
+oswarm watch
 
-## License
+# demo mode with mock agents
+oswarm watch --demo
 
-MIT
+# bootstrap harness structure in any repo
+oswarm init
+
+# check current swarm state
+oswarm status
+```
+
+## desktop tui
+
+three-pane ink terminal dashboard. tasks on the left, agent feed in the center, reasoning stream on the right. live cost tracking, elapsed time, alert detection for stuck/spinning agents.
+
+```
+┌─ TASKS ──────────┬─ AGENTS ─────────────────────┬─ REASONING ────────────┐
+│ ● refactor auth  │ [agent-1] cc wt:auth-types   │ agent-1:               │
+│  ├─✓ analyze deps│  → reading src/auth/mid...   │ "the auth module has   │
+│  ├─● extract types│  2m14s · 1.2k tokens        │  3 concerns tangled…"  │
+│  ├─● write tests │                              │                        │
+│  │  ├─● unit     │ [agent-2] codex wt:auth-tests│ agent-2:               │
+│  │  └─○ integr.  │  → running tests (14/27)     │ "test suite has 13     │
+│  ├─● split module│  4m01s · 3.9k tokens         │  failures remaining…"  │
+│  └─○ update docs │  ⚠ STUCK — retried 4x        │                        │
+│                  │                              │ agent-3:               │
+│ ✓ done ● active  │ [agent-3] cc wt:auth-split   │ "chose to split        │
+│ ○ pending ✕ fail │  → writing src/auth/sess...  │  session handling…"    │
+│                  │  1m29s · 2.1k tokens         │                        │
+├──────────────────┴──────────────────────────────┴────────────────────────┤
+│ [q]uit [k/j]nav [enter]expand [?]help   3 agents  $0.47  6m00s          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## architecture
+
+```
+types → config → providers → protocol → engine → adapters → skills → cli
+```
+
+the conductor engine has five subsystems that encode orchestration taste:
+
+- **task decomposer** — llm-driven goal → dag breakdown with isolation/model/context routing
+- **context router** — progressive disclosure, ~100 line agents.md as map not manual
+- **ralph loop runner** — agent-to-agent review cycles until consensus or escalation
+- **quality grader** — structural tests, linter compliance, doc freshness scoring
+- **entropy manager** — periodic garbage collection agents fixing drift and pattern violations
+
+agents nest n-deep. oswarm sets up the worktree environment (subagent definitions, hooks, taste-specs, linters) and constraints propagate to arbitrary depth without direct management. harness engineering applied to agent nesting.
+
+full spec: [docs/superpowers/specs/2026-03-14-oswarm-architecture-design.md](docs/superpowers/specs/2026-03-14-oswarm-architecture-design.md)
+
+## agent adapters
+
+| adapter | mechanism | sweet spot |
+|---------|-----------|------------|
+| claude code | agent sdk `query()` | primary local adapter |
+| openclaw | acpx `sessions_spawn` | session persistence |
+| codex | acpx | acp json-rpc over stdio |
+| e2b | e2b sdk | safe sandboxed execution |
+| fly.io | machines api | networked swarms (wireguard mesh) |
+| modal | `modal.Function` | gpu workloads |
+
+## skills
+
+installable in claude code (`~/.claude/skills/`) and openclaw (`./skills/`):
+
+- **oswarm-orchestrate** — the conductor itself as a skill
+- **oswarm-worker** — teaches agents how to decompose and self-organize
+- **oswarm-observe** — reasoning trace extraction and correlation
+- **oswarm-review** — ralph loop review orchestration
+- **oswarm-research** — deep codebase exploration
+
+## tech stack
+
+bun, typescript, react, ink, acp, claude agent sdk, opentelemetry
+
+## status
+
+v0.0.1 — tui built, types defined, cli wired, foundation layers in progress. agents incoming.
