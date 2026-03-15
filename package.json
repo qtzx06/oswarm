@@ -1,0 +1,36 @@
+{
+  "name": "oswarm",
+  "version": "0.0.1",
+  "description": "tasteful multi-agent conductor with reasoning-level observability",
+  "module": "index.ts",
+  "type": "module",
+  "bin": {
+    "oswarm": "./cli.ts"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./src/types/index.ts",
+    "./tui": "./src/tui/index.tsx"
+  },
+  "scripts": {
+    "dev": "bun --hot index.ts",
+    "watch": "bun run src/tui/app.tsx",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint:layers": "bun run src/lint/check-layers.ts"
+  },
+  "keywords": ["agent", "orchestrator", "swarm", "harness", "acp", "claude"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@types/react": "^19.2.14",
+    "ink": "^6.8.0",
+    "ink-spinner": "^5.0.0",
+    "react": "^19.2.4"
+  }
+}
