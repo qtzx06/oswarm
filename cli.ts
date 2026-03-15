@@ -2,9 +2,10 @@
 
 const cmd = process.argv[2];
 
-const commands: Record<string, () => void> = {
-  watch: () => {
-    console.log("oswarm watch — coming soon");
+const commands: Record<string, () => Promise<void> | void> = {
+  watch: async () => {
+    const { startWatch } = await import("./src/cli.tsx");
+    await startWatch();
   },
   run: () => {
     console.log("oswarm run — coming soon");
@@ -33,4 +34,4 @@ if (!handler) {
   console.error(`unknown command: ${cmd}`);
   process.exit(1);
 }
-handler();
+await handler();

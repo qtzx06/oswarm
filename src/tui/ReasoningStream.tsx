@@ -17,24 +17,29 @@ function ReasoningBlock({ entry }: { entry: ReasoningEntry }) {
   );
 }
 
-export function ReasoningStream({ entries }: { entries: ReasoningEntry[] }) {
+interface ReasoningStreamProps {
+  entries: ReasoningEntry[];
+  focused: boolean;
+}
+
+export function ReasoningStream({ entries, focused }: ReasoningStreamProps) {
   const recent = entries.slice(-10);
 
   return (
     <Box
       flexDirection="column"
       borderStyle="single"
-      borderColor="gray"
+      borderColor={focused ? "cyan" : "gray"}
       paddingX={1}
       flexBasis="30%"
       flexShrink={0}
     >
-      <Text bold color="white">
+      <Text bold color={focused ? "cyan" : "white"}>
         REASONING
       </Text>
       <Box flexDirection="column" marginTop={1}>
         {recent.map((entry, i) => (
-          <ReasoningBlock key={`${entry.agentId}-${i}`} entry={entry} />
+          <ReasoningBlock key={`${entry.agentId}-${entry.timestamp}`} entry={entry} />
         ))}
       </Box>
     </Box>

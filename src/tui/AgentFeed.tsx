@@ -21,12 +21,21 @@ const BACKEND_COLOR: Record<string, string> = {
   fly: "green",
 };
 
-function AgentRow({ agent }: { agent: AgentInfo }) {
+function AgentRow({
+  agent,
+  selected,
+}: {
+  agent: AgentInfo;
+  selected: boolean;
+}) {
   const color = BACKEND_COLOR[agent.backend] ?? "white";
-  const hasAlert = !!agent.alert;
 
   return (
-    <Box flexDirection="column" marginBottom={1}>
+    <Box
+      flexDirection="column"
+      marginBottom={1}
+      backgroundColor={selected ? "gray" : undefined}
+    >
       <Box>
         <Text color={color} bold>
           [{agent.id}]
@@ -42,33 +51,43 @@ function AgentRow({ agent }: { agent: AgentInfo }) {
           {formatElapsed(agent.elapsed)} · {formatTokens(agent.tokens)} tokens
         </Text>
       </Box>
-      {hasAlert && (
-        <Box paddingLeft={2} marginTop={0}>
+      {agent.alert && (
+        <Box paddingLeft={2}>
           <Text color="yellow" bold>
-            ⚠ {agent.alert!.type.toUpperCase()}
+            ⚠ {agent.alert.type.toUpperCase()}
           </Text>
-          <Text color="yellow"> — {agent.alert!.message}</Text>
+          <Text color="yellow"> — {agent.alert.message}</Text>
         </Box>
       )}
     </Box>
   );
 }
 
-export function AgentFeed({ agents }: { agents: AgentInfo[] }) {
+interface AgentFeedProps {
+  agents: AgentInfo[];
+  selectedIndex: number;
+  focused: boolean;
+}
+
+export function AgentFeed({ agents, selectedIndex, focused }: AgentFeedProps) {
   return (
     <Box
       flexDirection="column"
       borderStyle="single"
-      borderColor="gray"
+      borderColor={focused ? "cyan" : "gray"}
       paddingX={1}
       flexGrow={1}
     >
-      <Text bold color="white">
+      <Text bold color={focused ? "cyan" : "white"}>
         AGENTS
       </Text>
       <Box flexDirection="column" marginTop={1}>
-        {agents.map((agent) => (
-          <AgentRow key={agent.id} agent={agent} />
+        {agents.map((agent, i) => (
+          <AgentRow
+            key={agent.id}
+            agent={agent}
+            selected={focused && i === selectedIndex}
+          />
         ))}
       </Box>
     </Box>
