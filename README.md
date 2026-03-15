@@ -129,4 +129,4 @@ bun, typescript, react, ink, acp, claude agent sdk, opentelemetry
 
 ## status
 
-v0.0.1 — tui built, types defined, cli wired, foundation layers in progress. agents incoming.
+v0.0.1 — working. `oswarm run` spawns real cc agents via agent sdk. acpx adapter for codex/openclaw. three-pane tui with live observability. dag executor, worktree isolation, structural tests. 9 tests passing.
